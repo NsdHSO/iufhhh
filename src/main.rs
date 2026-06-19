@@ -1,37 +1,52 @@
+use std::fs::File;
+use std::io::Write;
 use std::{num, result};
 
-fn main() {
-    let s = String::from("hello");
-    let r1 = &s;
-    let r2 = &s;
-    println!("{} {}", r1, r2);
+#[derive(Debug)]
+struct D {
+    r: i32,
+}
 
-    fn foo<'a, 'b>(a: &'a str, b: &'b str) -> &'b str {
-        b
-    }
-    fn foo2<'a>(a: &'a str, b: &'a str) -> &'a str {
-        b
-    }
-    {
-        let e = String::from("Iancu");
-        let result2;
-        let x = String::from("X Third");
-        {
-            let result = foo(r1, &x);
-            println!("{}", result);
-            result2 = foo2(r1, &x);
+#[derive(Debug)]
+struct Record<'a> {
+    data: &'a str,
+    len: usize,
+}
+
+impl Record<'_> {
+    fn have_prefix(&self, prefix: &str) -> Option<&str> {
+        if self.data.starts_with(prefix) {
+            Some(self.data)
+        } else {
+            None
         }
-        println!("test foo2{}", result2);
-        let result = foo(r1, &e);
-        println!("{}", result)
     }
-    let result = foo(r1, r2);
-    println!("{}", result);
+}
 
-    fn first(v: &[i32]) -> &i32 {
-        &v[0]
+fn main() {
+    let s = String::from("hello Sami");
+
+    fn parse_record<'a>(data: &'a str) -> Record<'a> {
+        Record {
+            data,
+            len: data.len(),
+        }
     }
-    let num = vec![32, 1, 2, 3];
-    let n = first(&num);
-    print!("{:?}", n);
+    let d2 = parse_record(&s);
+    let result = d2.have_prefix("hello");
+    match result {
+        Some(data) => println!("Data:{}", data),
+        None => println!("No data"),
+    }
+    let mut local_file = File::create("hello.txt").expect("Issue with create");
+    say_hello(&mut local_file, &"Izancu so Hello, World! Iancu").expect("Issue with write");
+}
+
+fn say_hello<S>(out: &mut dyn Write, msg: S) -> std::io::Result<()>
+where
+    S: AsRef<str>,
+{
+    out.write_all(msg.as_ref().as_bytes())
+        .expect("was some issue");
+    out.flush()
 }
